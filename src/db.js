@@ -1,132 +1,101 @@
-// Módulo de Banco de Dados Local usando IndexedDB para o Editor de Tour Virtual
-const DB_NAME = 'VirtualTourDB';
-const DB_VERSION = 1;
+import { createClient } from '@supabase/supabase-js';
 
-let dbInstance = null;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export function initDB() {
-  return new Promise((resolve, reject) => {
-    if (dbInstance) {
-      resolve(dbInstance);
-      return;
-    }
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-
-    request.onerror = (event) => {
-      console.error('Erro ao abrir o IndexedDB:', event.target.error);
-      reject(event.target.error);
-    };
-
-    request.onsuccess = (event) => {
-      dbInstance = event.target.result;
-      resolve(dbInstance);
-    };
-
-    request.onupgradeneeded = (event) => {
-      const db = event.target.result;
-      
-      // Armazena as imagens 360 (Blobs) indexadas pelo ID da cena
-      if (!db.objectStoreNames.contains('images')) {
-        db.createObjectStore('images');
-      }
-
-      // Armazena as configurações do tour (JSON)
-      if (!db.objectStoreNames.contains('config')) {
-        db.createObjectStore('config');
-      }
-    };
-  });
+export async function initDB() {
+  // Mantido para compatibilidade com o código existente
+  return true;
 }
 
-// Salvar a configuração geral do Tour
+// Salvar a configuração geral do Tour no Supabase
 export async function saveTourConfig(config) {
-  const db = await initDB();
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(['config'], 'readwrite');
-    const store = transaction.objectStore('config');
-    const request = store.put(config, 'current_tour');
-
-    request.onsuccess = () => resolve(true);
-    request.onerror = () => reject(request.error);
-  });
+  const { data, error } = await supabase
+    .from('tour_config')
+    .upsert({ id: 'default', config_data: config }, { onConflict: 'id' });
+    
+  if (error) {
+    console.error('Erro ao salvar config no Supabase:', error);
+    throw error;
+  }
+  return true;
 }
 
-// Obter a configuração geral do Tour
+// Obter a configuração geral do Tour do Supabase
 export async function getTourConfig() {
-  const db = await initDB();
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(['config'], 'readonly');
-    const store = transaction.objectStore('config');
-    const request = store.get('current_tour');
-
-    request.onsuccess = () => resolve(request.result || null);
-    request.onerror = () => reject(request.error);
-  });
+  const { data, error } = await supabase
+    .from('tour_config')
+    .select('config_data')
+    .eq('id', 'default')
+    .single();
+    
+  if (error && error.code !== 'PGRST116') { // PGRST116 significa "Nenhum registro encontrado"
+    console.error('Erro ao buscar config no Supabase:', error);
+    throw error;
+  }
+  return data ? data.config_data : null;
 }
 
-// Salvar a imagem de uma cena específica (Blob ou File)
+// Salvar a imagem de uma cena no Supabase Storage
 export async function saveSceneImage(sceneId, imageBlob) {
-  const db = await initDB();
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(['images'], 'readwrite');
-    const store = transaction.objectStore('images');
-    const request = store.put(imageBlob, sceneId);
-
-    request.onsuccess = () => resolve(true);
-    request.onerror = () => reject(request.error);
-  });
+  const { data, error } = await supabase
+    .storage
+    .from('tour_images')
+    .upload(sceneId, imageBlob, {
+      upsert: true,
+      cacheControl: '3600'
+    });
+    
+  if (error) {
+    console.error('Erro ao fazer upload da imagem:', error);
+    throw error;
+  }
+  return true;
 }
 
-// Obter a imagem de uma cena específica como Object URL
+// Obter a URL pública da imagem de uma cena
 export async function getSceneImage(sceneId) {
-  const db = await initDB();
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(['images'], 'readonly');
-    const store = transaction.objectStore('images');
-    const request = store.get(sceneId);
-
-    request.onsuccess = () => {
-      if (request.result) {
-        try {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result);
-          reader.onerror = () => reject(reader.error);
-          reader.readAsDataURL(request.result);
-        } catch (e) {
-          console.error("Erro ao converter imagem do DB para DataURL", e);
-          resolve(null);
-        }
-      } else {
-        resolve(null);
-      }
-    };
-    request.onerror = () => reject(request.error);
+  // Verificar se a imagem existe no bucket primeiro
+  const { data: files, error } = await supabase.storage.from('tour_images').list('', {
+    search: sceneId
   });
+  
+  const exists = files && files.find(f => f.name === sceneId);
+  
+  if (error || !exists) {
+    return null;
+  }
+  
+  const { data } = supabase.storage.from('tour_images').getPublicUrl(sceneId);
+  return data.publicUrl;
 }
 
 // Deletar a imagem de uma cena
 export async function deleteSceneImage(sceneId) {
-  const db = await initDB();
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(['images'], 'readwrite');
-    const store = transaction.objectStore('images');
-    const request = store.delete(sceneId);
-
-    request.onsuccess = () => resolve(true);
-    request.onerror = () => reject(request.error);
-  });
+  const { data, error } = await supabase
+    .storage
+    .from('tour_images')
+    .remove([sceneId]);
+    
+  if (error) {
+    console.error('Erro ao deletar imagem:', error);
+    throw error;
+  }
+  return true;
 }
 
-// Limpar banco de dados completo
+// Limpar banco de dados completo (Reset)
 export async function clearAll() {
-  const db = await initDB();
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(['config', 'images'], 'readwrite');
-    transaction.objectStore('config').clear();
-    transaction.objectStore('images').clear();
-
-    transaction.oncomplete = () => resolve(true);
-    transaction.onerror = () => reject(transaction.error);
-  });
+  // Deleta as configs
+  await supabase.from('tour_config').delete().eq('id', 'default');
+  
+  // Deleta todas as imagens do storage
+  const { data: files } = await supabase.storage.from('tour_images').list();
+  if (files && files.length > 0) {
+    const fileNames = files.map(x => x.name);
+    await supabase.storage.from('tour_images').remove(fileNames);
+  }
+  return true;
 }
