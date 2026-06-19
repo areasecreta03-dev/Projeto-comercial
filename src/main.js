@@ -252,7 +252,8 @@ async function preparePannellumConfig() {
     } else {
       const dataUrl = await getSceneImage(sceneId);
       if (dataUrl) {
-        scene.panorama = dataUrl;
+        scene.panorama = dataUrl + '?v=' + Date.now(); // Evita cache CORS do navegador
+        scene.crossOrigin = 'anonymous'; // Garante CORS por cena
       } else {
         console.warn(`Imagem não encontrada no DB para a cena ${sceneId}. Usando fallback.`);
         scene.panorama = '/alma.jpg';
