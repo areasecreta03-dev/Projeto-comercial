@@ -301,7 +301,13 @@ async function preparePannellumConfig() {
 
             // Ouvinte para salvar as novas rotações permanentemente
             container.addEventListener('camera3d-rotate-end', async () => {
-              await saveTourConfig(tourConfig);
+              try {
+                await saveTourConfig(tourConfig);
+              } catch(err) {
+                if (err.message === "TABLE_MISSING") {
+                  showToast("ATENÇÃO: Crie a tabela no Supabase para salvar.", "error");
+                }
+              }
             });
 
             // Lógica de clique na câmera: Em modo visualização, dar zoom e exibir modal
@@ -686,10 +692,19 @@ async function saveNewHotspot() {
   
   activeScene.hotSpots.push(newHs);
   
-  await saveTourConfig(tourConfig);
-  closeHotspotModal();
-  showToast("Hotspot criado com sucesso!");
-  initViewer(currentSceneId);
+  try {
+    await saveTourConfig(tourConfig);
+    closeHotspotModal();
+    showToast("Hotspot criado com sucesso!");
+    initViewer(currentSceneId);
+  } catch(err) {
+    console.error("Erro ao salvar hotspot:", err);
+    if (err.message === "TABLE_MISSING") {
+      showToast("ATENÇÃO: A tabela 'tour_config' não existe no Supabase.", "error");
+    } else {
+      showToast("Erro ao salvar hotspot.", "error");
+    }
+  }
 }
 
 // Atualizar Interface baseado no Modo (Edição vs Visualização)
@@ -762,7 +777,11 @@ async function handleAddScene() {
     
   } catch (err) {
     console.error("Erro ao salvar nova cena:", err);
-    showToast("Falha ao salvar a nova cena localmente.", "error");
+    if (err.message === "TABLE_MISSING") {
+      showToast("ATENÇÃO: A tabela 'tour_config' não existe no Supabase. Por favor, execute o SQL do arquivo setup-supabase.mjs no painel do Supabase.", "error");
+    } else {
+      showToast("Falha ao salvar a nova cena.", "error");
+    }
   }
 }
 
@@ -782,7 +801,11 @@ async function saveGlobalSettings() {
     initViewer(currentSceneId);
   } catch (err) {
     console.error(err);
-    showToast("Erro ao salvar as configurações.", "error");
+    if (err.message === "TABLE_MISSING") {
+      showToast("ATENÇÃO: A tabela 'tour_config' não existe no Supabase. Por favor, execute o SQL do arquivo setup-supabase.mjs no painel do Supabase.", "error");
+    } else {
+      showToast("Erro ao salvar as configurações.", "error");
+    }
   }
 }
 

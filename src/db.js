@@ -18,6 +18,9 @@ export async function saveTourConfig(config) {
     
   if (error) {
     console.error('Erro ao salvar config no Supabase:', error);
+    if (error.code === 'PGRST205' || error.code === '42P01') {
+      throw new Error("TABLE_MISSING");
+    }
     throw error;
   }
   return true;
@@ -31,7 +34,8 @@ export async function getTourConfig() {
     .eq('id', 'default')
     .single();
     
-  if (error && error.code !== 'PGRST116') { // PGRST116 significa "Nenhum registro encontrado"
+  // PGRST116: Sem registros; PGRST205/42P01: Tabela não existe
+  if (error && !['PGRST116', 'PGRST205', '42P01'].includes(error.code)) {
     console.error('Erro ao buscar config no Supabase:', error);
     throw error;
   }
