@@ -1,7 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// A chave anon do Supabase é PÚBLICA por design — pode ser exposta no frontend
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://mgbsoldvgnsrkfojspdg.supabase.co';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_5krCmfGmayVh2hTIs_b1BA_XhXpI5Wo';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
