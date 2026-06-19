@@ -849,7 +849,12 @@ async function initApp() {
     if (!savedConfig) {
       // Usar amostras padrão se estiver vazio
       savedConfig = JSON.parse(JSON.stringify(defaultTourConfig));
-      await saveTourConfig(savedConfig);
+      try {
+        await saveTourConfig(savedConfig);
+      } catch(saveErr) {
+        // Se a tabela ainda não existe, continua em memória mesmo assim
+        console.warn('Tabela tour_config não encontrada — usando config padrão em memória.', saveErr.message);
+      }
     }
     
     tourConfig = savedConfig;
