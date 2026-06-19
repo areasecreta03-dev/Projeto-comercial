@@ -242,6 +242,9 @@ function showToast(message, type = 'success') {
 async function preparePannellumConfig() {
   const preparedConfig = JSON.parse(JSON.stringify(tourConfig));
   
+  if (!preparedConfig.default) preparedConfig.default = {};
+  preparedConfig.default.crossOrigin = 'anonymous'; // Forçar CORS globalmente
+  
   for (const sceneId in preparedConfig.scenes) {
     const scene = preparedConfig.scenes[sceneId];
     if (scene.isSample) {

@@ -3,7 +3,8 @@ export const defaultTourConfig = {
   default: {
     firstScene: 'alma',
     author: 'Editor de Tour Virtual',
-    sceneFadeDuration: 1000
+    sceneFadeDuration: 1000,
+    crossOrigin: 'anonymous'
   },
   scenes: {
     alma: {
