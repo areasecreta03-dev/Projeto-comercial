@@ -50,7 +50,8 @@ export async function saveSceneImage(sceneId, imageBlob) {
     .from('tour_images')
     .upload(sceneId, imageBlob, {
       upsert: true,
-      cacheControl: '3600'
+      cacheControl: '3600',
+      contentType: imageBlob.type || 'image/jpeg'
     });
     
   if (error) {
@@ -62,17 +63,6 @@ export async function saveSceneImage(sceneId, imageBlob) {
 
 // Obter a URL pública da imagem de uma cena
 export async function getSceneImage(sceneId) {
-  // Verificar se a imagem existe no bucket primeiro
-  const { data: files, error } = await supabase.storage.from('tour_images').list('', {
-    search: sceneId
-  });
-  
-  const exists = files && files.find(f => f.name === sceneId);
-  
-  if (error || !exists) {
-    return null;
-  }
-  
   const { data } = supabase.storage.from('tour_images').getPublicUrl(sceneId);
   return data.publicUrl;
 }

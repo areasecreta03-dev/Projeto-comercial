@@ -747,7 +747,11 @@ async function handleAddScene() {
     return;
   }
   
-  const sceneId = 'scene_' + Date.now();
+  let ext = 'jpg';
+  if (selectedFile.name.includes('.')) {
+    ext = selectedFile.name.split('.').pop().toLowerCase();
+  }
+  const sceneId = 'scene_' + Date.now() + '.' + ext;
   
   // Criar registro na configuração do tour
   tourConfig.scenes[sceneId] = {
