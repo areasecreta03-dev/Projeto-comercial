@@ -1,0 +1,877 @@
+/* Sistema de Design Premium - Editor de Tour Virtual 360 */
+
+:root {
+  --bg-primary: #09090b; /* Quase preto absoluto */
+  --bg-secondary: rgba(255, 255, 255, 0.02); /* Fundo sutil de cartões */
+  --bg-tertiary: rgba(255, 255, 255, 0.04);
+  --bg-glass: rgba(9, 9, 11, 0.85); /* Sidebar mais flat */
+  --border-glass: rgba(255, 255, 255, 0.06); /* Bordas quase imperceptíveis */
+  --border-focus: rgba(168, 85, 247, 0.5);
+  
+  --text-primary: #f8fafc;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+  
+  --accent: #a855f7; /* Violeta Premium */
+  --accent-hover: #c084fc;
+  --accent-light: rgba(168, 85, 247, 0.15);
+  
+  --success: #10b981;
+  --danger: #ef4444;
+  --danger-hover: #f87171;
+  --danger-light: rgba(239, 68, 68, 0.15);
+  
+  --sans: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+  
+  --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+  --shadow-accent: 0 0 20px rgba(168, 85, 247, 0.3);
+  
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--sans);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow: hidden;
+  line-height: 1.5;
+}
+
+/* Layout Principal */
+#app {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  position: relative;
+}
+
+/* Botão de Toggle da Sidebar (Mobile) */
+#sidebar-toggle {
+  display: none;
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  z-index: 100;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-glass);
+  backdrop-filter: blur(12px);
+  color: var(--text-primary);
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: var(--shadow-lg);
+  transition: var(--transition);
+}
+
+#sidebar-toggle:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--accent);
+}
+
+/* Barra Lateral (Sidebar) */
+#sidebar {
+  width: 380px;
+  height: 100%;
+  background: var(--bg-glass);
+  border-right: 1px solid var(--border-glass);
+  backdrop-filter: blur(16px);
+  display: flex;
+  flex-direction: column;
+  z-index: 90;
+  transition: var(--transition);
+  box-shadow: 10px 0 30px rgba(0, 0, 0, 0.3);
+  flex-shrink: 0;
+}
+
+.sidebar-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-glass);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sidebar-header .logo-icon {
+  background: linear-gradient(135deg, var(--accent), #6366f1);
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: white;
+  font-size: 1.2rem;
+  box-shadow: var(--shadow-accent);
+}
+
+.sidebar-header h1 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+.sidebar-content {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Custom Scrollbar para a Sidebar */
+.sidebar-content::-webkit-scrollbar {
+  width: 6px;
+}
+.sidebar-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sidebar-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+.sidebar-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Painéis de Seção na Sidebar */
+.sidebar-section {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-glass);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.sidebar-section h2 {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Modos de Operação (Toggle Buttons) */
+.mode-selector {
+  display: flex;
+  background: var(--bg-primary);
+  border-radius: 8px;
+  padding: 4px;
+  border: 1px solid var(--border-glass);
+}
+
+.mode-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-family: var(--sans);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: var(--transition);
+}
+
+.mode-btn.active {
+  background: var(--bg-tertiary);
+  color: white;
+  border: 1px solid var(--border-glass);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.mode-btn:not(.active):hover {
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+}
+
+/* Inputs e Formulários */
+.form-group {
+  margin-bottom: 12px;
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.form-input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border-glass);
+  color: var(--text-primary);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  transition: var(--transition);
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-light);
+}
+
+/* Lista de Cenas */
+.scene-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.scene-list::-webkit-scrollbar {
+  width: 4px;
+}
+.scene-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
+
+.scene-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.scene-item:hover {
+  background: var(--bg-tertiary);
+}
+
+.scene-item.active {
+  background: var(--bg-tertiary);
+  border-color: var(--border-glass);
+}
+
+.scene-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.scene-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-primary);
+}
+
+.scene-badge {
+  font-size: 0.7rem;
+  color: var(--accent-hover);
+  background: var(--accent-light);
+  padding: 2px 6px;
+  border-radius: 4px;
+  align-self: flex-start;
+  font-weight: 600;
+}
+
+.scene-badge.user-scene {
+  color: var(--success);
+  background: rgba(16, 185, 129, 0.15);
+}
+
+.delete-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+
+.delete-btn:hover {
+  color: var(--danger);
+  background: var(--danger-light);
+}
+
+/* Lista de Hotspots da Cena Atual */
+.hotspot-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 150px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.hotspot-list::-webkit-scrollbar {
+  width: 4px;
+}
+.hotspot-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
+
+.hotspot-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-glass);
+  border-radius: 6px;
+  font-size: 0.8rem;
+}
+
+.hotspot-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 80%;
+  color: var(--text-secondary);
+}
+
+.hotspot-type-icon {
+  margin-right: 6px;
+  font-size: 0.9rem;
+}
+
+/* Área de Upload de Cena */
+.upload-area {
+  border: 2px dashed var(--border-glass);
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: var(--transition);
+  background: var(--bg-primary);
+}
+
+.upload-area:hover {
+  border-color: var(--accent);
+  background: var(--bg-tertiary);
+}
+
+.upload-area-icon {
+  font-size: 1.5rem;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.upload-area text {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.upload-file-info {
+  font-size: 0.75rem;
+  color: var(--success);
+  margin-top: 6px;
+  word-break: break-all;
+}
+
+/* Botões Gerais */
+.btn {
+  width: 100%;
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn:hover {
+  background: var(--accent-hover);
+  box-shadow: 0 4px 14px rgba(168, 85, 247, 0.4);
+}
+
+.btn-secondary {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-glass);
+  color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: none;
+  border-color: var(--text-secondary);
+}
+
+.btn-danger {
+  background: var(--danger-light);
+  color: var(--danger-hover);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.btn-danger:hover {
+  background: var(--danger);
+  color: white;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.sidebar-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border-glass);
+}
+
+/* Container do Visualizador (Viewer Area) */
+#main-viewer {
+  flex-grow: 1;
+  height: 100%;
+  position: relative;
+  background-color: #000;
+}
+
+#panorama {
+  width: 100%;
+  height: 100%;
+}
+
+/* Status Flutuante do Modo Edição */
+.edit-status-panel {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 80;
+  background: rgba(10, 13, 20, 0.85);
+  border: 1px solid var(--border-focus);
+  backdrop-filter: blur(8px);
+  padding: 10px 16px;
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  animation: slideIn 0.3s ease-out;
+}
+
+.edit-status-pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+  animation: pulse 1.5s infinite;
+}
+
+/* Painel de Ajuda Flutuante no Visualizador */
+.help-overlay {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  z-index: 80;
+  background: rgba(10, 13, 20, 0.75);
+  border: 1px solid var(--border-glass);
+  backdrop-filter: blur(8px);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  pointer-events: none;
+}
+
+/* Modais e Diálogos de Hotspots */
+.modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 150;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal {
+  background: #0f131f;
+  border: 1px solid var(--border-glass);
+  border-radius: 16px;
+  width: 90%;
+  max-width: 420px;
+  box-shadow: var(--shadow-lg), 0 0 30px rgba(168, 85, 247, 0.1);
+  transform: translateY(20px);
+  transition: transform 0.3s ease;
+}
+
+.modal-overlay.active .modal {
+  transform: translateY(0);
+}
+
+.modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-glass);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 1.25rem;
+  transition: var(--transition);
+}
+
+.modal-close:hover {
+  color: var(--text-primary);
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.modal-footer {
+  padding: 12px 20px 20px;
+  display: flex;
+  gap: 10px;
+}
+
+/* Sistema de Notificação Toast */
+#toast-container {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.toast {
+  background: rgba(15, 19, 31, 0.9);
+  border-left: 4px solid var(--accent);
+  border-top: 1px solid var(--border-glass);
+  border-right: 1px solid var(--border-glass);
+  border-bottom: 1px solid var(--border-glass);
+  backdrop-filter: blur(12px);
+  color: var(--text-primary);
+  padding: 12px 20px;
+  border-radius: 0 8px 8px 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  box-shadow: var(--shadow-lg);
+  min-width: 280px;
+  max-width: 380px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  animation: toastIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: var(--transition);
+}
+
+.toast.success {
+  border-left-color: var(--success);
+}
+
+.toast.error {
+  border-left-color: var(--danger);
+}
+
+/* Estilos Específicos para customização do Pannellum */
+.pnlm-control-bar {
+  background: rgba(10, 13, 20, 0.85) !important;
+  border: 1px solid var(--border-glass) !important;
+  border-radius: 6px !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+.pnlm-zoom-in, .pnlm-zoom-out, .pnlm-fullscreen-toggle {
+  background-image: none !important;
+  color: var(--text-primary) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: var(--transition) !important;
+  font-weight: bold !important;
+}
+
+.pnlm-zoom-in::after { content: '+'; font-size: 1.1rem; }
+.pnlm-zoom-out::after { content: '−'; font-size: 1.1rem; }
+.pnlm-fullscreen-toggle::after { content: '⛶'; font-size: 1.1rem; }
+
+.pnlm-control-bar div:hover {
+  background-color: var(--accent-light) !important;
+  color: var(--accent-hover) !important;
+}
+
+/* Hotspots Customizados no Pannellum */
+.custom-hotspot-nav {
+  height: 32px;
+  width: 32px;
+  border-radius: 50%;
+  background: rgba(15, 15, 20, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  animation: pulse-hotspot-nav 2.5s infinite;
+}
+
+.custom-hotspot-nav::after {
+  content: '↑';
+  font-family: sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.9);
+  transition: color 0.2s ease;
+}
+
+.custom-hotspot-nav:hover {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(255, 255, 255, 1);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+}
+
+.custom-hotspot-nav:hover::after {
+  color: black;
+}
+
+.custom-hotspot-info {
+  height: 30px;
+  width: 30px;
+  border-radius: 50%;
+  background: rgba(15, 15, 20, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.custom-hotspot-info::after {
+  content: 'i';
+  font-family: "Georgia", serif;
+  font-style: italic;
+  font-weight: bold;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.9);
+  transition: color 0.2s ease;
+}
+
+.custom-hotspot-info:hover {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(255, 255, 255, 1);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+}
+
+.custom-hotspot-info:hover::after {
+  color: black;
+}
+/* Hotspot customizado - Câmera 3D - SEM círculo, apenas o modelo flutuante */
+.custom-hotspot-camera3d {
+  background: transparent !important;
+  background-image: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+  cursor: pointer !important;
+  animation: none !important;
+  width: auto !important;
+  height: auto !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  transform-origin: center center;
+  transition: filter 0.2s ease;
+}
+
+.custom-hotspot-camera3d::after,
+.custom-hotspot-camera3d::before {
+  display: none !important;
+  content: none !important;
+}
+
+.custom-hotspot-camera3d:hover {
+  filter: drop-shadow(0 0 10px rgba(168, 85, 247, 0.9)) drop-shadow(0 0 20px rgba(168, 85, 247, 0.4));
+  box-shadow: none !important;
+}
+
+.custom-hotspot-camera3d canvas {
+  display: block !important;
+  pointer-events: none !important;
+  border-radius: 0 !important;
+  border: none !important;
+}
+
+/* Evita que QUALQUER tooltip do Pannellum cause bug de hover piscante (flickering) ao passar o mouse */
+.pnlm-hotspot .pnlm-tooltip {
+  pointer-events: none !important;
+}
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.6;
+  }
+}
+
+@keyframes pulse-hotspot-nav {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.8);
+  }
+  70% {
+    box-shadow: 0 0 0 15px rgba(255, 255, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toastIn {
+  from {
+    transform: translateX(100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Range Sliders (controles de Câmera 3D no modal) */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-glass);
+  border-radius: 4px;
+  height: 6px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+input[type="range"]:hover {
+  border-color: var(--accent);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  box-shadow: 0 0 6px rgba(168, 85, 247, 0.6);
+  transition: transform 0.15s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: none;
+}
+
+/* Responsividade (Telas menores) */
+@media (max-width: 900px) {
+  #sidebar-toggle {
+    display: block;
+  }
+  
+  #sidebar {
+    position: absolute;
+    left: -380px;
+    top: 0;
+    bottom: 0;
+    box-shadow: none;
+  }
+  
+  #sidebar.open {
+    left: 0;
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
+  }
+}
